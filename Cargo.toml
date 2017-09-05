@@ -5,3 +5,4 @@ authors = ["Julia Naomi <jnaomi@thoughtworks.com>"]
 
 [dependencies]
 iron = "*"
+router = "*"
