@@ -1,29 +1,48 @@
 extern crate iron;
 extern crate iron_test;
+extern crate urlencoded;
 
+use iron::{Handler, status};
 use iron::prelude::*;
-use iron::{Handler, Headers, status};
-#[allow(unused_imports)]
-use iron_test::{request, response};
 
-struct GokuHandler;
+use urlencoded::UrlEncodedBody;
 
-impl Handler for GokuHandler {
-    fn handle(&self, _: &mut Request) -> IronResult<Response> {
-        Ok(Response::with((status::Ok, "Oi, eu sou o Goku!!!")))
+struct SpeechHandler;
+
+impl Handler for SpeechHandler {
+    fn handle(&self, req: &mut Request) -> IronResult<Response> {
+        let body = req.get_ref::<UrlEncodedBody>()
+                      .expect("UrlEnconding is not correct");
+        let name = body.get("name").unwrap()[0].to_owned();
+        let action = body.get("action").unwrap()[0].to_owned();
+
+        Ok(Response::with((status::Ok, name + ", " + &action + "!")))
     }
 }
 
 fn main() {
-    Iron::new(GokuHandler).http("localhost:3000").unwrap();
+    Iron::new(SpeechHandler).http("localhost:3000").unwrap();
 }
 
-#[test]
-fn test_goku_handler() {
-    let response = request::get("http://localhost:3000/hello",
-                                Headers::new(),
-                                &GokuHandler).unwrap();
-    let result_body = response::extract_body_to_bytes(response);
+#[cfg(test)]
+mod test {
+    use iron::Headers;
+    use iron::headers::ContentType;
 
-    assert_eq!(result_body, b"Oi, eu sou o Goku!!!");
+    use iron_test::{request, response};
+
+    use super::SpeechHandler;
+
+    #[test]
+    fn test_body() {
+        let mut headers = Headers::new();
+                headers.set(ContentType("application/x-www-form-urlencoded".parse().unwrap()));
+        let response = request::post("http://localhost:3000/",
+                                     headers,
+                                     "name=Goku&action=Morra",
+                                     &SpeechHandler);
+        let result = response::extract_body_to_string(response.unwrap());
+
+        assert_eq!(result, "Goku, Morra!");
+    }
 }
