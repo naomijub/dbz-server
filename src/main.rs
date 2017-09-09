@@ -2,7 +2,7 @@ extern crate iron;
 extern crate iron_test;
 
 use iron::prelude::*;
-use iron::{Handler, status};
+use iron::{Handler, Headers, status};
 #[allow(unused_imports)]
 use iron_test::{request, response};
 
